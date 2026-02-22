@@ -27,26 +27,19 @@
             padding: 20px;
         }
 
-        /* HEADER / PIXEL ART LOGO */
-        header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            margin-top: 5vh; 
-        }
+        header { text-align: center; margin-bottom: 30px; margin-top: 5vh; }
         
         h1 { 
-            font-family: 'Press Start 2P', cursive; /* Pixel font applied here */
+            font-family: 'Press Start 2P', cursive;
             font-size: 2.5rem; 
             margin: 0; 
             cursor: pointer; 
-            letter-spacing: -2px;
             text-shadow: 3px 3px 0px var(--border);
         }
         
         .g-b { color: #268bd2; } .g-r { color: #dc322f; }
         .g-y { color: #b58900; } .g-g { color: #859900; }
 
-        /* SEARCH BAR */
         .search-container {
             width: 100%;
             max-width: 600px;
@@ -89,7 +82,6 @@
             box-shadow: 3px 3px 0px 0px var(--border); 
         }
 
-        /* RESULTS AREA */
         #results-container {
             width: 100%;
             max-width: 800px;
@@ -120,11 +112,8 @@
         }
 
         .result-item a:hover { text-decoration: underline; color: #dc322f; }
-
         .result-url { color: #859900; font-size: 0.85rem; word-break: break-all; margin-bottom: 8px; }
-
         .result-snippet { line-height: 1.4; font-size: 0.95rem; }
-
         .loading { text-align: center; font-style: italic; margin-top: 20px; }
 
         footer { margin-top: auto; padding: 40px; font-size: 0.8rem; opacity: 0.6; text-align: center; }
@@ -140,14 +129,14 @@
         <input type="text" id="search-query" placeholder="Explore the indie web..." autocomplete="off">
         <div class="buttons">
             <button onclick="fetchResults()">Search</button>
-            <button onclick="lucky()">I'm Feeling Lucky</button>
+            <button onclick="lucky()">Surprise Me</button>
         </div>
     </div>
 
     <div id="results-container"></div>
 
     <footer>
-        Data via Marginalia API • 100% Indie Web Aesthetic
+        Data via Marginalia API (CORS via Proxy) • 100% Indie Web Aesthetic
     </footer>
 
     <script>
@@ -164,25 +153,29 @@
 
             resultsContainer.innerHTML = '<div class="loading">Consulting the web archives...</div>';
 
+            // CORS Proxy to bypass "Same Origin" policy blocks
+            const proxy = "https://corsproxy.io/?";
+            const targetUrl = `https://api.marginalia.nu/v1/search/${encodeURIComponent(query)}?profile=independent`;
+
             try {
-                // Using Marginalia Public API
-                const response = await fetch(`https://api.marginalia.nu/v1/search/${encodeURIComponent(query)}?profile=independent`);
+                const response = await fetch(proxy + encodeURIComponent(targetUrl));
                 
-                if (!response.ok) throw new Error('API Error');
+                if (!response.ok) throw new Error('Proxy or API Error');
 
                 const data = await response.json();
                 displayResults(data.results);
             } catch (error) {
+                console.error(error);
                 resultsContainer.innerHTML = `
                 <div class="result-item" style="border-color: #dc322f">
-                    Error: Unable to reach the Marginalia engine. Please try again in a moment.
+                    <strong>CORS / API Error:</strong> The Marginalia server is rejecting the request or the proxy is down. 
+                    Try again in a few seconds.
                 </div>`;
             }
         }
 
         function displayResults(results) {
             resultsContainer.innerHTML = "";
-
             if (!results || results.length === 0) {
                 resultsContainer.innerHTML = "<p style='text-align:center;'>No results found in the small web.</p>";
                 return;
@@ -191,9 +184,7 @@
             results.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'result-item';
-                
-                const snippet = item.description || "No description available for this handcrafted site.";
-
+                const snippet = item.description || "No description available for this site.";
                 div.innerHTML = `
                     <div class="result-url">${item.url}</div>
                     <a href="${item.url}" target="_blank">${item.title || 'Untitled Site'}</a>
@@ -204,11 +195,10 @@
         }
 
         function lucky() {
-            const randomTerms = ['neocities', 'retro computing', 'analog photography', 'small web', 'linux', 'personal blog', 'gemini protocol', 'digital garden'];
-            queryInput.value = randomTerms[Math.floor(Math.random() * randomTerms.length)];
+            const terms = ['old computing', 'personal blog', 'cyberpunk', 'analog', 'hobbyist', 'linux'];
+            queryInput.value = terms[Math.floor(Math.random() * terms.length)];
             fetchResults();
         }
     </script>
-
 </body>
 </html>
